@@ -25,7 +25,7 @@ This repository contains the PyTorch implementations of three deep learning arch
 └── environment_cluster.yml
 ```
 
-u## Dataset Layout
+## Dataset Layout
 
 Place the preprocessed patient datasets under `resources/dataset/`:
 * **Single-beam data:** `resources/dataset/outputs_random_angel/pt_*/pt_*.npz` (containing `phantom_density`, `dose`, `theta`, and physical bounds).
