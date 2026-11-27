@@ -730,12 +730,12 @@ def generate_publication_summary_tables(per_angle_results: Dict, total_dose_resu
 # 5. Clean Training Loss Curves
 # ==============================================================================
 def render_clean_loss_curves():
-    """
-    Renders clean, simply-styled training loss curves for all 3 models:
-      - 3D U-Net (Single-Beam)
-      - Hierarchical GNN (Single-Beam)
-      - 3D ResNet U-Net (Total CT Dose)
-    No 'best' epoch stars or complex annotations; clean minimal styling.
+    """Render training/validation loss curves individually and on one unified comparison plot.
+
+    Args:
+        None.
+    Returns:
+        None. Saves per-model PNGs and a combined single-axes plot (all_models_training_loss.png) to OUT_DIR.
     """
     print("\nRendering clean training loss curves from history...")
 
@@ -743,28 +743,29 @@ def render_clean_loss_curves():
         {
             "path": BASE_DIR / "outputs" / "unet_supercomputer" / "training_history.json",
             "name": "3D U-Net",
+            "color": "#1f77b4",
             "out": OUT_DIR / "unet_training_loss.png",
-            "mode": "unet_single",
         },
         {
             "path": BASE_DIR / "outputs" / "gnn_hierarchical" / "training_history.json",
             "name": "Hierarchical GNN",
+            "color": "#d95f02",
             "out": OUT_DIR / "gnn_training_loss.png",
-            "mode": "gnn_single",
         },
         {
             "path": BASE_DIR / "outputs" / "unet_total_dose" / "loss_history.json",
             "name": "Total CT Dose U-Net",
+            "color": "#1b9e77",
             "out": OUT_DIR / "total_dose_unet_training_loss.png",
-            "mode": "total_dose",
         },
     ]
 
-    # Combined 1x3 panel plot
-    fig_all, axes_all = plt.subplots(1, 3, figsize=(16, 4.2), dpi=180)
+    # Single unified axes plot comparing all models together
+    fig_all, ax_all = plt.subplots(figsize=(8.5, 5.2), dpi=200)
     fig_all.patch.set_facecolor("white")
+    ax_all.set_facecolor("white")
 
-    for i, cfg in enumerate(configs):
+    for cfg in configs:
         p = cfg["path"]
         if not p.exists():
             print(f"  [!] History file not found: {p}")
@@ -777,9 +778,6 @@ def render_clean_loss_curves():
             fig, ax = plt.subplots(figsize=(6.2, 4.2), dpi=180)
             fig.patch.set_facecolor("white")
             ax.set_facecolor("white")
-
-            ax_comb = axes_all[i]
-            ax_comb.set_facecolor("white")
 
             loss_dict = data.get("loss", {})
             hist = data.get("history", data)
@@ -799,7 +797,7 @@ def render_clean_loss_curves():
                 ax.plot(val_x, val_loss, color="#d62728", lw=1.8, ls="--", label="Validation Loss")
                 ax.set_ylabel("Loss", fontsize=10.5)
             elif val_mae:
-                ax.plot(ep_val, val_mae, color="#d62728", lw=1.8, ls="--", label=r"Val MAE ($\\imes 10^{-12}$ Gy)")
+                ax.plot(ep_val, val_mae, color="#d62728", lw=1.8, ls="--", label=r"Val MAE ($\times 10^{-12}$ Gy)")
                 ax.set_ylabel("Loss / Error", fontsize=10.5)
             else:
                 ax.set_ylabel("Loss", fontsize=10.5)
@@ -808,37 +806,31 @@ def render_clean_loss_curves():
             ax.set_title(f"{cfg['name']} Training Loss", fontsize=11.5, fontweight="bold", pad=9)
             ax.grid(True, linestyle=":", alpha=0.5)
             ax.legend(frameon=True, fontsize=9.5, facecolor="white", edgecolor="#dfe6e9")
-
-            # Combined panel
-            ax_comb.plot(ep_tr, loss_tr, color="#1f77b4", lw=2.0, label="Training Loss")
-            if has_val_loss:
-                val_x = ep_tr if len(val_loss) == len(ep_tr) else ep_val
-                ax_comb.plot(val_x, val_loss, color="#d62728", lw=1.8, ls="--", label="Validation Loss")
-                ax_comb.set_ylabel("Loss", fontsize=10)
-            elif val_mae:
-                ax_comb.plot(ep_val, val_mae, color="#d62728", lw=1.8, ls="--", label=r"Val MAE ($\\imes 10^{-12}$ Gy)")
-                ax_comb.set_ylabel("Loss / Error", fontsize=10)
-            else:
-                ax_comb.set_ylabel("Loss", fontsize=10)
-
-            ax_comb.set_xlabel("Epoch", fontsize=10)
-            ax_comb.set_title(cfg["name"], fontsize=11, fontweight="bold", pad=8)
-            ax_comb.grid(True, linestyle=":", alpha=0.5)
-            ax_comb.legend(frameon=True, fontsize=9, facecolor="white", edgecolor="#dfe6e9")
             fig.tight_layout()
             fig.savefig(cfg["out"], dpi=180, facecolor="white", bbox_inches="tight")
             plt.close(fig)
             print(f"  [✓] Rendered clean loss curve: {cfg['out'].name}")
 
+            # Unified single-axes comparison plot
+            c = cfg["color"]
+            ax_all.plot(ep_tr, loss_tr, color=c, lw=2.0, ls="-", label=f"{cfg['name']} (Train)")
+            if has_val_loss:
+                val_x = ep_tr if len(val_loss) == len(ep_tr) else ep_val
+                ax_all.plot(val_x, val_loss, color=c, lw=1.8, ls="--", alpha=0.85, label=f"{cfg['name']} (Val)")
+
         except Exception as e:
             print(f"  [!] Error rendering {cfg['name']}: {e}")
 
-    # Save combined 1x3 panel
+    ax_all.set_xlabel("Epoch", fontsize=11)
+    ax_all.set_ylabel("Loss", fontsize=11)
+    ax_all.set_title("Training and Validation Loss Comparison", fontsize=12.5, fontweight="bold", pad=10)
+    ax_all.grid(True, linestyle=":", alpha=0.5)
+    ax_all.legend(frameon=True, fontsize=9, ncol=2, loc="upper right", facecolor="white", edgecolor="#dfe6e9")
     fig_all.tight_layout()
     all_out = OUT_DIR / "all_models_training_loss.png"
-    fig_all.savefig(all_out, dpi=180, facecolor="white", bbox_inches="tight")
+    fig_all.savefig(all_out, dpi=200, facecolor="white", bbox_inches="tight")
     plt.close(fig_all)
-    print(f"  [✓] Rendered combined 1x3 panel: {all_out.name}")
+    print(f"  [✓] Rendered unified single-axes plot: {all_out.name}")
 
 
 def copy_artifacts_to_brain():
