@@ -25,22 +25,7 @@ This repository contains the PyTorch implementations of three deep learning arch
 └── environment_cluster.yml
 ```
 
-## Installation
-
-Using `pip`:
-```bash
-python -m pip install -r requirements.txt
-```
-
-Or using Conda (with CUDA 12.1):
-```bash
-conda env create -f environment_cluster.yml
-conda activate dosenn_cluster
-```
-
-> **Note:** `torch_geometric` is optional for `HierarchicalGridGNN` — `src/model.py` includes a pure-PyTorch `GraphConv` fallback if PyG is not installed.
-
-## Dataset Layout
+u## Dataset Layout
 
 Place the preprocessed patient datasets under `resources/dataset/`:
 * **Single-beam data:** `resources/dataset/outputs_random_angel/pt_*/pt_*.npz` (containing `phantom_density`, `dose`, `theta`, and physical bounds).
