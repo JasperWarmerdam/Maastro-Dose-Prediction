@@ -1,0 +1,16 @@
+outputs/
+resources/dataset/*
+!resources/dataset/.gitkeep
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.venv/
+
+# Visual Studio
+.vs/
+# VS Code user settings
+.vscode/
+# Visual Studio files
+*.user
+*.suo

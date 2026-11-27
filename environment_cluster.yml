@@ -1,0 +1,13 @@
+name: dosenn_cluster
+channels:
+  - pytorch
+  - pyg
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pytorch>=2.2.0
+  - pytorch-cuda=12.1
+  - pyg
+  - numpy>=1.24
+  - matplotlib>=3.7
